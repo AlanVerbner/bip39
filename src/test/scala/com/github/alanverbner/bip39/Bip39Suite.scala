@@ -1,9 +1,12 @@
 package com.github.alanverbner.bip39
 
+import java.text.Normalizer.Form.NFKD
+import java.text.Normalizer.normalize
+
+import com.github.alanverbner._
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
 import scodec.bits.ByteVector
-import com.github.alanverbner._
 
 class Bip39Suite extends FlatSpec with Matchers with TableDrivenPropertyChecks {
 
@@ -165,7 +168,7 @@ class Bip39Suite extends FlatSpec with Matchers with TableDrivenPropertyChecks {
 
   }
 
-  ignore should "pass https://github.com/bip32JP/bip32JP.github.io/blob/master/test_JP_BIP39.json" in {
+  it should "pass https://github.com/bip32JP/bip32JP.github.io/blob/master/test_JP_BIP39.json" in {
     val wordList = WordList.load(JapaneseWordList).get
     val passphrase = "TREZOR"
 
@@ -173,7 +176,7 @@ class Bip39Suite extends FlatSpec with Matchers with TableDrivenPropertyChecks {
       ("Entropy", "Sentence", "Passphase", "Seed", "bip32_xprv"),
       (
         "00000000000000000000000000000000",
-        "あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あおぞら",
+        "あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あおぞら",
         "㍍ガバヴァぱばぐゞちぢ十人十色",
         "a262d6fb6122ecf45be09c50492b31f92e9beb7d9a845987a02cefda57a15f9c467a17872029a9e92299b5cbdf306e3a0ee620245cbd508959b6cb7ca637bd55",
         "xprv9s21ZrQH143K258jAiWPAM6JYT9hLA91MV3AZUKfxmLZJCjCHeSjBvMbDy8C1mJ2FL5ytExyS97FAe6pQ6SD5Jt9SwHaLorA8i5Eojokfo1"
@@ -371,7 +374,7 @@ class Bip39Suite extends FlatSpec with Matchers with TableDrivenPropertyChecks {
 
   def runChecks(entropy: String, sentence: String, passphrase: String, seed: String, wordList: WordList): Unit = {
     // Generation
-    bip39.generate(ByteVector.fromHex(entropy).get.toArray, wordList) shouldEqual sentence
+    normalize(bip39.generate(ByteVector.fromHex(entropy).get.toArray, wordList), NFKD) shouldEqual normalize(sentence, NFKD)
     // Check
     bip39.check(sentence, wordList) shouldEqual true
     // Seed calculation

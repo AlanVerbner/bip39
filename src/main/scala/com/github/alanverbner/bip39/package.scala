@@ -1,7 +1,8 @@
 package com.github.alanverbner
 
 import java.security.SecureRandom
-import java.text.Normalizer
+import java.text.Normalizer.Form.NFKD
+import java.text.Normalizer.normalize
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
@@ -66,9 +67,11 @@ package object bip39 {
     val words = mnemonic.split(wordList.delimiter)
     if (words.length % 3 != 0) false
     else {
-      val entWithChecksum = words.map(wordList.words.indexOf(_)).foldLeft(BitVector.empty) { (ent: BitVector, wordIndex: Int) =>
-        ent ++ BitVector.fromInt(wordIndex, size = BitsGroupSize)
-      }
+      val entWithChecksum = words
+        .map(normalize(_, NFKD))
+        .map(wordList.words.indexOf(_)).foldLeft(BitVector.empty) { (ent: BitVector, wordIndex: Int) =>
+          ent ++ BitVector.fromInt(wordIndex, size = BitsGroupSize)
+        }
       val checkSumSize = entWithChecksum.length / 33
       val ent = entWithChecksum.dropRight(checkSumSize)
       val checksum = entWithChecksum.takeRight(checkSumSize)
@@ -84,8 +87,8 @@ package object bip39 {
     * @return Seed bytes
     */
   def toSeed(mnemonic: String, passphrase: Option[String] = None): Array[Byte] = {
-    val normalizedMnemonic = Normalizer.normalize(mnemonic.toCharArray, Normalizer.Form.NFKD).toCharArray
-    val normalizedSeed = Normalizer.normalize(s"mnemonic${passphrase.getOrElse("")}", Normalizer.Form.NFKD)
+    val normalizedMnemonic = normalize(mnemonic.toCharArray, NFKD).toCharArray
+    val normalizedSeed = normalize(s"mnemonic${passphrase.getOrElse("")}", NFKD)
 
     val spec = new PBEKeySpec(
       normalizedMnemonic,

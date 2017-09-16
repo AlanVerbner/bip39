@@ -21,8 +21,9 @@ bip39.check(sentence, EnglishWordList) shouldEqual true
 
 ### TODO
 
-- [ ] Japanese support
+- [x] Japanese support
 - [ ] Add more tests
+- [ ] Allow custom wordlists
 
 ### API
 

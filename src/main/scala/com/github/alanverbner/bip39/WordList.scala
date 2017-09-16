@@ -2,7 +2,7 @@ package com.github.alanverbner.bip39
 
 import java.text.Normalizer
 
-import scala.io.{BufferedSource, Source}
+import scala.io.{BufferedSource, Codec, Source}
 import scala.util.Try
 
 object WordList {
@@ -21,7 +21,7 @@ object WordList {
   private def loadFile(loadFile: () => BufferedSource): Try[Seq[String]] = {
     Try(loadFile()).map { r =>
       try {
-        r.getLines().toList.map(word => Normalizer.normalize(word, Normalizer.Form.NFKD))
+        r.getLines().toList
       } finally {
         r.close()
       }
@@ -29,7 +29,7 @@ object WordList {
   }
 
   private def fileLoader(fileName: String): () => BufferedSource =
-    () => Source.fromResource(s"wordlists/$fileName")
+    () => Source.fromResource(s"wordlists/$fileName")(Codec.UTF8)
 }
 
 case class WordList(words: Seq[String], delimiter: String)
