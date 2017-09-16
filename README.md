@@ -1,6 +1,7 @@
 ## Scala BIP39
 
 [![CircleCI](https://circleci.com/gh/AlanVerbner/bip39.svg?style=svg)](https://circleci.com/gh/AlanVerbner/bip39)
+[![Coverage Status](https://coveralls.io/repos/github/AlanVerbner/bip39/badge.svg?branch=master)](https://coveralls.io/github/AlanVerbner/bip39?branch=master)
 
 This is a toy BIP39 Scala based implementation I made for fun.
 
