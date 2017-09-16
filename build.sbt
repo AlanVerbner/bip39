@@ -2,7 +2,7 @@ organization := "com.github.alanverbner"
 
 name := "bip39"
 
-version := "0.2"
+version := "1.0"
 
 scalaVersion := "2.12.3"
 
@@ -10,7 +10,8 @@ libraryDependencies ++= Seq(
   "org.consensusresearch" %% "scrypto" % "1.2.0-RC3",
   "org.scodec" %% "scodec-bits" % "1.1.5",
 
-  "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+  "org.scalatest" %% "scalatest" % "3.0.1" % "test",
+  "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
 )
 
 useGpg := true

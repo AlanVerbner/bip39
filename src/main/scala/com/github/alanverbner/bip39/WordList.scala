@@ -1,21 +1,26 @@
 package com.github.alanverbner.bip39
 
-import java.text.Normalizer
+import com.github.alanverbner.bip39
 
 import scala.io.{BufferedSource, Codec, Source}
 import scala.util.Try
 
 object WordList {
 
-  def load(language: WordListLanguage): Try[WordList] = language match {
-    case ChineseSimplifiedWordList => loadFile(fileLoader("chinese_simplified.txt")).map(WordList(_, " "))
-    case ChineseTraditionalWordList => loadFile(fileLoader("chinese_traditional.txt")).map(WordList(_, " "))
-    case EnglishWordList => loadFile(fileLoader("english.txt")).map(WordList(_, " "))
-    case FrenchWordList => loadFile(fileLoader("french.txt")).map(WordList(_, " "))
-    case ItalianWordList => loadFile(fileLoader("italian.txt")).map(WordList(_, " "))
-    case JapaneseWordList => loadFile(fileLoader("japanese.txt")).map(WordList(_, "\u3000"))
-    case KoreanWordList => loadFile(fileLoader("korean.txt")).map(WordList(_, " "))
-    case SpanishList => loadFile(fileLoader("spanish.txt")).map(WordList(_, " "))
+  def load(language: WordListLanguage): Try[WordList] = {
+    val maybeWordList = language match {
+      case ChineseSimplifiedWordList => loadFile(resourceLoader("chinese_simplified.txt")).map(WordList(_, " "))
+      case ChineseTraditionalWordList => loadFile(resourceLoader("chinese_traditional.txt")).map(WordList(_, " "))
+      case EnglishWordList => loadFile(resourceLoader("english.txt")).map(WordList(_, " "))
+      case FrenchWordList => loadFile(resourceLoader("french.txt")).map(WordList(_, " "))
+      case ItalianWordList => loadFile(resourceLoader("italian.txt")).map(WordList(_, " "))
+      case JapaneseWordList => loadFile(resourceLoader("japanese.txt")).map(WordList(_, "\u3000"))
+      case KoreanWordList => loadFile(resourceLoader("korean.txt")).map(WordList(_, " "))
+      case SpanishList => loadFile(resourceLoader("spanish.txt")).map(WordList(_, " "))
+      case CustomWordList(path, delimiter) => loadFile(() => Source.fromFile(path, "UTF-8")).map(WordList(_, delimiter))
+    }
+
+    maybeWordList.filter(_.words.size == bip39.WordListSize)
   }
 
   private def loadFile(loadFile: () => BufferedSource): Try[Seq[String]] = {
@@ -28,7 +33,7 @@ object WordList {
     }
   }
 
-  private def fileLoader(fileName: String): () => BufferedSource =
+  private def resourceLoader(fileName: String): () => BufferedSource =
     () => Source.fromResource(s"wordlists/$fileName")(Codec.UTF8)
 }
 
@@ -44,4 +49,5 @@ case object ItalianWordList extends WordListLanguage
 case object JapaneseWordList extends WordListLanguage
 case object KoreanWordList extends WordListLanguage
 case object SpanishList extends WordListLanguage
+case class CustomWordList(path: String, delimiter: String) extends WordListLanguage
 

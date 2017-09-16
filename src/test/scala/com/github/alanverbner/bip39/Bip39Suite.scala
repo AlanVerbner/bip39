@@ -1,14 +1,18 @@
 package com.github.alanverbner.bip39
 
+import java.security.SecureRandom
 import java.text.Normalizer.Form.NFKD
 import java.text.Normalizer.normalize
 
 import com.github.alanverbner._
-import org.scalatest.prop.TableDrivenPropertyChecks
+import org.scalacheck.Prop
+import org.scalatest.prop.{Checkers, TableDrivenPropertyChecks}
 import org.scalatest.{FlatSpec, Matchers}
 import scodec.bits.ByteVector
 
-class Bip39Suite extends FlatSpec with Matchers with TableDrivenPropertyChecks {
+import scala.util.Try
+
+class Bip39Suite extends FlatSpec with Matchers with TableDrivenPropertyChecks with Checkers{
 
   "Bip39" should "pass https://github.com/trezor/python-mnemonic/blob/master/vectors.json" in {
     val wordList = WordList.load(EnglishWordList).get
@@ -370,6 +374,43 @@ class Bip39Suite extends FlatSpec with Matchers with TableDrivenPropertyChecks {
     forAll(cases) { (entropy, sentence, passphrase, seed, _) =>
       runChecks(entropy, sentence, passphrase, seed, wordList)
     }
+  }
+
+  it should "generate mnemonic for all Entropy configurations" in {
+    val wordList = WordList.load(JapaneseWordList).get
+
+    Seq(Entropy128,Entropy160,Entropy192,Entropy224,Entropy256).foreach { e =>
+      Try {
+        bip39.generate(e, wordList, new SecureRandom())
+      }.isSuccess shouldBe true
+    }
+
+  }
+
+  it should "return same mnemonic given the same ent array" in {
+    val wordList = WordList.load(EnglishWordList).get
+
+    check(Prop.forAll { ent: Array[Byte] =>
+      if(AllowedEntropyByteSizes contains ent.size) {
+        val m1 = bip39.generate(ent, wordList)
+        val m2 = bip39.generate(ent, wordList)
+        m1 == m2
+      }
+      else true
+    })
+  }
+
+  it should "fail generate is called with a world list that does not have 2048 words" in {
+    check(Prop.forAll { words: List[String] =>
+      val ent = Array(1.toByte, 2.toByte)
+      val wordList = WordList(words, " ")
+
+      val result = Try { bip39.generate(Entropy128, wordList, new SecureRandom()) }
+      val result2 = Try { bip39.generate(ent, wordList) }
+
+      (wordList.words.size == bip39.WordListSize && result.isSuccess) ||
+        (wordList.words.size != bip39.WordListSize && result.isFailure) && (result.isSuccess == result2.isSuccess)
+    })
   }
 
   def runChecks(entropy: String, sentence: String, passphrase: String, seed: String, wordList: WordList): Unit = {
